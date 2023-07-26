@@ -4,7 +4,7 @@
 
 这是一个基于 [typora-community-plugin](https://github.com/typora-community-plugin/typora-community-plugin) 开发的，适用于 [Typora](https://typora.io) 的插件。
 
-为了高亮不支持的语言，可以根据配置将语言 A 映射为语言 B，以使用语言 B 的语法高亮。
+为了高亮不支持的语言，可以根据配置将语言 A 映射为语言 B，以使用语言 B 的语法高亮。这种映射会在保存之前被移除。
 
 ## Preview
 
