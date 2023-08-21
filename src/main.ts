@@ -1,4 +1,4 @@
-import { Plugin, SettingTab } from '@typora-community-plugin/core'
+import { Plugin, PluginSettings, SettingTab } from '@typora-community-plugin/core'
 
 
 interface LangMapperSettings {
@@ -12,19 +12,22 @@ const DEFAULT_SETTINGS: LangMapperSettings = {
   }
 }
 
-export default class LangMapperPlugin extends Plugin {
-
-  settings: LangMapperSettings
+export default class LangMapperPlugin extends Plugin<LangMapperSettings> {
 
   async onload() {
-    await this.loadSettings()
+    this.registerSettings(
+      new PluginSettings(this.app, this.manifest, {
+        version: 1,
+      }))
+
+    this.settings.setDefault(DEFAULT_SETTINGS)
 
     this.registerMarkdownPreProcessor({
       when: 'preload',
       type: 'code',
       process: codeblock =>
         codeblock.replace(/^(\n?\s*\`{3,})(\w+)(?=\n)/, ($, $1, lang) => {
-          const { mapper } = this.settings
+          const mapper = this.settings.get('mapper')
           return mapper[lang] ? `${$1}${mapper[lang]} ${lang}` : $
         })
     })
@@ -34,23 +37,12 @@ export default class LangMapperPlugin extends Plugin {
       type: 'code',
       process: codeblock =>
         codeblock.replace(/^(\n?\s*\`{3,})(\w+) (\w+)(?=\n)/, ($, $1, lang1, lang2) => {
-          const { mapper } = this.settings
+          const mapper = this.settings.get('mapper')
           return mapper[lang2] && (lang1 === mapper[lang2]) ? `${$1}${lang2}` : $
         })
     })
 
     this.registerSettingTab(new LangMapperSettingTab(this))
-  }
-
-  onunload() {
-  }
-
-  async loadSettings() {
-    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData())
-  }
-
-  async saveSettings() {
-    await this.saveData(this.settings)
   }
 }
 
@@ -65,7 +57,7 @@ class LangMapperSettingTab extends SettingTab {
   }
 
   onload() {
-    const { mapper } = this.plugin.settings
+    const mapper = this.plugin.settings.get('mapper')
 
     this.addSetting(setting => {
       setting.addTable(table => {
@@ -83,11 +75,11 @@ class LangMapperSettingTab extends SettingTab {
           .onRowChange(row => {
             if (!row.olang) return
             mapper[row.olang] = row.mlang
-            this.plugin.saveSettings()
+            this.plugin.settings.set('mapper', mapper)
           })
           .onRowRemove(row => {
             delete mapper[row.olang]
-            this.plugin.saveSettings()
+            this.plugin.settings.set('mapper', mapper)
           })
       })
     })
