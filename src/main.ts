@@ -1,4 +1,5 @@
-import { Plugin, PluginSettings, SettingTab } from '@typora-community-plugin/core'
+import { editor } from 'typora'
+import { Plugin, PluginSettings, SettingTab, decorate } from '@typora-community-plugin/core'
 
 
 interface LangMapperSettings {
@@ -9,7 +10,13 @@ const DEFAULT_SETTINGS: LangMapperSettings = {
   mapper: {
     'dataviewjs': 'js',
     'dataview': 'sql',
+    'markmap': 'markdown',
   }
+}
+
+const aliasMapper: Record<string, string> = {
+  'js': 'javascript',
+  'ts': 'typescript',
 }
 
 export default class LangMapperPlugin extends Plugin<LangMapperSettings> {
@@ -22,25 +29,14 @@ export default class LangMapperPlugin extends Plugin<LangMapperSettings> {
 
     this.settings.setDefault(DEFAULT_SETTINGS)
 
-    this.registerMarkdownPreProcessor({
-      when: 'preload',
-      type: 'code',
-      process: codeblock =>
-        codeblock.replace(/^(\n?\s*\`{3,})(\w+)(?=\n)/, ($, $1, lang) => {
-          const mapper = this.settings.get('mapper')
-          return mapper[lang] ? `${$1}${mapper[lang]} ${lang}` : $
-        })
-    })
-
-    this.registerMarkdownPreProcessor({
-      when: 'presave',
-      type: 'code',
-      process: codeblock =>
-        codeblock.replace(/^(\n?\s*\`{3,})(\w+) (\w+)(?=\n)/, ($, $1, lang1, lang2) => {
-          const mapper = this.settings.get('mapper')
-          return mapper[lang2] && (lang1 === mapper[lang2]) ? `${$1}${lang2}` : $
-        })
-    })
+    this.register(
+      decorate.returnValue(editor.fences, 'addCodeBlock', (_, cm) => {
+        const mapper = this.settings.get('mapper')
+        const lang = cm.getOption('mode')
+        const lang2 = mapper[lang]
+        cm.setOption('mode', aliasMapper[lang2] ?? lang2 ?? lang)
+        return cm
+      }))
 
     this.registerSettingTab(new LangMapperSettingTab(this))
   }

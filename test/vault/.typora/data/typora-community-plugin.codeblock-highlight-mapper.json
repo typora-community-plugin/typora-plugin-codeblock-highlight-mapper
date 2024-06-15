@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "settings": {
+    "mapper": {
+      "dataviewjs": "javascript",
+      "dataview": "sql"
+    }
+  }
+}
