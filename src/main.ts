@@ -34,7 +34,8 @@ export default class LangMapperPlugin extends Plugin<LangMapperSettings> {
         const mapper = this.settings.get('mapper')
         const lang = cm.getOption('mode')
         const lang2 = mapper[lang]
-        cm.setOption('mode', aliasMapper[lang2] ?? lang2 ?? lang)
+        const lang3 = aliasMapper[lang2] ?? lang2 ?? lang
+        if (lang !== lang3) cm.setOption('mode', lang3)
         return cm
       }))
 
