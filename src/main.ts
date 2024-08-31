@@ -30,13 +30,17 @@ export default class LangMapperPlugin extends Plugin<LangMapperSettings> {
     this.settings.setDefault(DEFAULT_SETTINGS)
 
     this.register(
-      decorate.returnValue(editor.fences, 'addCodeBlock', (_, cm) => {
+      decorate(editor.fences, 'addCodeBlock', fn => (cid) => {
+        const node = editor.getNode(cid)
         const mapper = this.settings.get('mapper')
-        const lang = cm.getOption('mode')
+        const lang = node.get('lang')
         const lang2 = mapper[lang]
         const lang3 = aliasMapper[lang2] ?? lang2 ?? lang
-        if (lang !== lang3) cm.setOption('mode', lang3)
-        return cm
+        if (lang !== lang3) {
+          node.set('lang', lang3)
+          setTimeout(() => node.set('lang', lang))
+        }
+        return fn(cid)
       }))
 
     this.registerSettingTab(new LangMapperSettingTab(this))
