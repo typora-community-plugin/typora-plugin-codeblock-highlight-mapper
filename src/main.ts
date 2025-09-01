@@ -1,4 +1,4 @@
-import { editor } from 'typora'
+import { getCodeMirrorMode } from 'typora'
 import { Plugin, PluginSettings, SettingTab, decorate } from '@typora-community-plugin/core'
 
 
@@ -14,11 +14,6 @@ const DEFAULT_SETTINGS: LangMapperSettings = {
   }
 }
 
-const aliasMapper: Record<string, string> = {
-  'js': 'javascript',
-  'ts': 'typescript',
-}
-
 export default class LangMapperPlugin extends Plugin<LangMapperSettings> {
 
   async onload() {
@@ -30,17 +25,10 @@ export default class LangMapperPlugin extends Plugin<LangMapperSettings> {
     this.settings.setDefault(DEFAULT_SETTINGS)
 
     this.register(
-      decorate(editor.fences, 'addCodeBlock', fn => (cid) => {
-        const node = editor.getNode(cid)
+      decorate(window as any, 'getCodeMirrorMode', (fn: typeof getCodeMirrorMode) => (lang: string) => {
         const mapper = this.settings.get('mapper')
-        const lang = node.get('lang')
         const lang2 = mapper[lang]
-        const lang3 = aliasMapper[lang2] ?? lang2 ?? lang
-        if (lang !== lang3) {
-          node.set('lang', lang3)
-          setTimeout(() => node.set('lang', lang))
-        }
-        return fn(cid)
+        return fn(lang2)
       }))
 
     this.registerSettingTab(new LangMapperSettingTab(this))
