@@ -28,7 +28,7 @@ export default class LangMapperPlugin extends Plugin<LangMapperSettings> {
       decorate(window as any, 'getCodeMirrorMode', (fn: typeof getCodeMirrorMode) => (lang: string) => {
         const mapper = this.settings.get('mapper')
         const lang2 = mapper[lang]
-        return fn(lang2)
+        return fn(lang2 ?? lang)
       }))
 
     this.registerSettingTab(new LangMapperSettingTab(this))
